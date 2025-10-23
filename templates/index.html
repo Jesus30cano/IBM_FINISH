@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard de Predicciones</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .config-section {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .config-section label {
+        display: block;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 8px;
+      }
+
+      .config-section input {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+      }
+
+      .card-title {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon {
+        width: 30px;
+        height: 30px;
+        color: #667eea;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 8px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .results {
+        display: none;
+      }
+
+      .results.show {
+        display: block;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+      }
+
+      .stat-label {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .stat-value.positive {
+        color: #10b981;
+      }
+
+      .stat-value.negative {
+        color: #ef4444;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .info-row:last-child {
+        border-bottom: none;
+      }
+
+      .info-label {
+        color: #666;
+        font-weight: 600;
+      }
+
+      .info-value {
+        color: #333;
+        font-weight: 500;
+      }
+
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        background: #fee;
+        color: #c33;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        display: none;
+      }
+
+      .error.show {
+        display: block;
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .dashboard {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎯 Sistema de Predicción</h1>
+        <p>Análisis predictivo de datos municipales</p>
+      </div>
+
+      <div class="config-section">
+        <label for="apiUrl">🔗 URL de la API</label>
+        <input
+          type="text"
+          id="apiUrl"
+          value="http://localhost:8000/predict"
+          placeholder="http://localhost:8000/predict"
+        />
+        <p style="font-size: 0.85rem; color: #666; margin-top: 5px">
+          Cambia la URL si tu API está en otro puerto o dominio
+        </p>
+      </div>
+
+      <div class="dashboard">
+        <div class="card">
+          <h2 class="card-title">
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            Datos de Entrada
+          </h2>
+
+          <form id="predictionForm">
+            <div class="form-group">
+              <label for="municipio">Municipio</label>
+              <input type="text" id="municipio" value="SOLEDAD" required />
+            </div>
+
+            <div class="form-group">
+              <label for="yearMonth">Mes y Año</label>
+              <input type="month" id="yearMonth" value="2024-08" required />
+            </div>
+
+            <div class="form-group">
+              <label for="cantidad">Cantidad Actual</label>
+              <input type="number" id="cantidad" value="2000" required />
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+              Generar Predicción
+            </button>
+          </form>
+
+          <div class="error" id="errorMsg"></div>
+        </div>
+
+        <div class="card results" id="resultsCard">
+          <h2 class="card-title">
+            <svg
+              class="icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+            Resultados de Predicción
+          </h2>
+
+          <div id="loadingSpinner" style="display: none">
+            <div class="loader"></div>
+          </div>
+
+          <div id="resultsContent" style="display: none">
+            <div class="info-row">
+              <span class="info-label">📍 Municipio:</span>
+              <span class="info-value" id="resMunicipio"></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">📅 Fecha:</span>
+              <span class="info-value" id="resFecha"></span>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-label">Cantidad Estimada</div>
+                <div class="stat-value" id="resCantidad">-</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Tasa por 100k</div>
+                <div class="stat-value" id="resTasa">-</div>
+              </div>
+              <div class="stat-card" style="grid-column: 1 / -1">
+                <div class="stat-label">Porcentaje de Cambio</div>
+                <div class="stat-value" id="resPorcentaje">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("predictionForm");
+      const resultsCard = document.getElementById("resultsCard");
+      const loadingSpinner = document.getElementById("loadingSpinner");
+      const resultsContent = document.getElementById("resultsContent");
+      const errorMsg = document.getElementById("errorMsg");
+      const submitBtn = document.getElementById("submitBtn");
+      const apiUrlInput = document.getElementById("apiUrl");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const municipio = document.getElementById("municipio").value;
+        const yearMonth = document.getElementById("yearMonth").value;
+        const cantidad = parseInt(document.getElementById("cantidad").value);
+        const apiUrl = apiUrlInput.value.trim();
+
+        resultsCard.classList.add("show");
+        loadingSpinner.style.display = "block";
+        resultsContent.style.display = "none";
+        errorMsg.classList.remove("show");
+        submitBtn.disabled = true;
+
+        try {
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              MUNICIPIO: municipio,
+              YEAR_MONTH: `${yearMonth}-01`,
+              CANTIDAD: cantidad,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          document.getElementById("resMunicipio").textContent = data.MUNICIPIO;
+          document.getElementById("resFecha").textContent = data.FECHA_INPUT;
+          document.getElementById("resCantidad").textContent =
+            data.CANTIDAD_FUTURA_ESTIMADA.toLocaleString();
+          document.getElementById("resTasa").textContent =
+            data.PREDICCION_PROXIMO_MES_TASA_100k.toFixed(2);
+
+          const porcentajeEl = document.getElementById("resPorcentaje");
+          porcentajeEl.textContent = `${data.PORCENTAJE_AUMENTO > 0 ? "+" : ""}${data.PORCENTAJE_AUMENTO.toFixed(2)}%`;
+          porcentajeEl.className =
+            "stat-value " +
+            (data.PORCENTAJE_AUMENTO > 0 ? "positive" : "negative");
+
+          loadingSpinner.style.display = "none";
+          resultsContent.style.display = "block";
+        } catch (error) {
+          errorMsg.textContent =
+            "❌ Error al obtener la predicción: " + error.message;
+          errorMsg.classList.add("show");
+          loadingSpinner.style.display = "none";
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
+
